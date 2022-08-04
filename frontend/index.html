@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ToDo</title>
+        <link rel="stylesheet" href="./index.css">
+    </head>
+    <body>
+
+        <div class="header">
+            <h2 id="title" onclick="titleColor()">Todo app</h3>
+            <input type="text" id="myInput" placeholder="Add a todo.">
+            <span onclick="newElement()" class="addBtn">Add</span>
+        </div>
+
+        
+        <h3 id="ping" onclick="ping()">Click me to ping server</h3>
+        <h3 id="list" onclick="listTodo()">Click me to listTodo</h3>
+
+        <p id='loader'> Loading ... </p>
+
+        <ul id="todo">
+        </ul>
+
+        <script src="./index.js"></script>
+
+    </body>
+</html>

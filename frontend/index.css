@@ -1,0 +1,21 @@
+body {
+    max-width: 80%;
+    margin: auto;
+}
+ul li.checked {
+    background: rgb(139, 239, 122);
+    text-decoration: line-through;
+  }
+
+  /* change background-color on hover */
+ul li:hover {
+    background: #ddd;
+  }
+ul li.checked:hover {
+    background: rgb(139, 239, 122);
+}
+
+  /* start off as none, and then when loading is done javascript will show list*/
+ul {
+    display: none;
+}

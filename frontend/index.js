@@ -32,8 +32,9 @@ const listTodo = async () => {
     ul.textContent = "" // clears list everytime we fetch, since lists will be small no problem doing this
     for (const [k, v] of Object.entries(response)) {
         let li = document.createElement("li")
+        li.id=k
         li.appendChild(document.createTextNode(v.Text))
-        if (k.Done) {
+        if (v.Done) {
             li.className = "checked"
         }
         ul.addEventListener("click", toggle)
@@ -46,15 +47,32 @@ const listTodo = async () => {
 }
 
 const toggle = (e) => {
-    if (e.target.classList.contains("checked")) {
-        e.target.className = ""
-    } else {
-        e.target.className="checked"
-    }
+    let checked = e.target.classList.contains('checked')
+    console.log({is_checked: checked})
+    let xhr = new XMLHttpRequest()
+        let url = 'http://localhost:8000/check_todo'
+        xhr.open("PUT", url, true);
+        xhr.setRequestHeader('Content-Type', "application/json;charset=UTF-8")
+        
+        // Create callback to toggle checking in the UI
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                if (checked) {
+                    e.target.className = ""
+                } else {
+                    e.target.className="checked"
+                }
+                
+            }
+        }
+        let myId = e.target.id
+        // used !checked to toggle checking, if it is checked, I want to uncheck. and vice versa 
+        let data = {Done: !checked, Id: myId}
+        console.log(data)
+        xhr.send(JSON.stringify(data)    )
 }
 
 function newElement(){
-
     const inputValue = document.getElementById("myInput").value;
     if (inputValue === '') {
         alert("You must write something, can't be empty")

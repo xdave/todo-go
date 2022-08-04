@@ -2,7 +2,10 @@
 basic todo app with go
 
 ## demo video
-./local-demo.mp4
+
+https://user-images.githubusercontent.com/23269759/182846589-43b05f1d-0af5-44d5-8dc0-d1fcb12293e3.mp4
+
+
 ## set up locally
 1. Make sure you have go and git installed
 2. run `git clone https://github.com/brilliant-ember/todo-go`

@@ -2,7 +2,10 @@ body {
     max-width: 80%;
     margin: auto;
 }
-ul li.checked {
+/* li{
+  display: grid;
+} */
+ul p.checked {
     background: rgb(139, 239, 122);
     text-decoration: line-through;
   }
@@ -11,11 +14,38 @@ ul li.checked {
 ul li:hover {
     background: #ddd;
   }
-ul li.checked:hover {
+ul p.checked:hover {
     background: rgb(139, 239, 122);
 }
 
   /* start off as none, and then when loading is done javascript will show list*/
 ul {
     display: none;
+}
+
+li {
+  display: flex;
+}
+li span {
+  float:right;
+  color: orange;
+  background: rgb(172, 172, 172);
+  right: 10%;
+  bottom: 3px;
+  margin-right: 15px;
+  text-decoration:none !important;
+  padding-left: 3px;
+  padding-right: 1px;
+  margin: auto;
+}
+li p:hover{
+  cursor:pointer;
+  background-color: aliceblue;
+}
+span{
+  cursor: pointer;
+
+}
+li span:hover {
+  background: red;
 }

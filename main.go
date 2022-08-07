@@ -6,81 +6,101 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
-	"github.com/google/uuid"
+	"todo-go/sqldb"
+	"todo-go/structs"
 )
-
-type Todo struct {
-	Id   uuid.UUID
-	Text string
-	Done bool
-}
-type updated_todo struct {
-	Id   uuid.UUID
-	Done bool
-}
 
 var mux = http.NewServeMux()
 
-var id1, id2 = uuid.New(), uuid.New()
-var db = map[uuid.UUID]Todo{
-	id1: {Id: id1, Text: "Wake up", Done: true},
-	id2: {Id: id2, Text: "Do 10 backflips", Done: false},
+func handleError(w http.ResponseWriter, err error){
+	fmt.Printf("an error has occured \n %v \n", err)
+	http.Error(w, "oops", 400)
 }
-
 func list_todo(w http.ResponseWriter, r *http.Request) {
-	jsonValue, _ := json.Marshal(db)
+
+	ts, err := sqldb.GetTodos()
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+	fmt.Println(ts)
+	jsonValue, _ := json.Marshal(ts)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 
-	err := json.NewEncoder(w).Encode(jsonValue)
+	err = json.NewEncoder(w).Encode(jsonValue)
 	if err != nil {
-		fmt.Printf("error can't list todo \n %v \n", err)
-		panic("aaaaah errored out!")
-
+		handleError(w, err)
+		return
 	}
 }
 
 func add_todo(w http.ResponseWriter, r *http.Request) {
+	origin := r.Header["Origin"][0]
+	// fmt.Println(origin)
 	resp, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Println(err)
+		handleError(w, err)
+		return
 	}
-	i := uuid.New()
-	db[i] = Todo{Id: i, Done: false, Text: string(resp)}
-	fmt.Println(db)
-	// w.Write([]byte(i.String()))
-	io.WriteString(w, i.String())
+	id, err := sqldb.InsertTodo( &structs.TodoInsert{Checked: false, Text: string(resp), Ip_Address: origin})
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+	io.WriteString(w, fmt.Sprintf("%d", id))
 }
 
 func update_checked(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var ut updated_todo
+	var ut structs.TodoCheck
 	er := decoder.Decode(&ut)
 	if er != nil {
-		fmt.Println(er)
-		panic("aaaaah errored out!")
+		handleError(w, er)
+		return
 	}
-	var oldTodo Todo = db[ut.Id]
-	// fmt.Printf("current db entry %v, received ut: %v\n \n", oldTodo, ut)
-	oldTodo.Done = ut.Done
-	// fmt.Printf("updated db entry %v @ %p \n ", oldTodo, &oldTodo)
-	db[ut.Id] = oldTodo
-	// fmt.Println(db[ut.Id])
-	// fmt.Println("---")
-
+	er = sqldb.UpdateTodoChecked(ut.Id, ut.Checked)
+	if er != nil {
+		handleError(w, er)
+		return
+	}
 }
+func delete_todo(w http.ResponseWriter, r *http.Request) {
+	resp, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+	s := string (resp)
+	id, err  := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+	err = sqldb.DeleteTodo(id)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+}
+
 
 func main() {
 
+	sqldb.OpenConnection()
 	mux.Handle("/", http.FileServer(http.Dir("./frontend")))
 	mux.HandleFunc("/add_todo", add_todo)
 	mux.HandleFunc("/check_todo", update_checked)
+	mux.HandleFunc("/delete_todo", delete_todo)
 	mux.HandleFunc("/list", list_todo)
 	mux.HandleFunc("/ping",
 		func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, "OK") })
 	var port string = ":8000"
 	fmt.Printf("starting server at port %s\n", port)
 	fmt.Println(http.ListenAndServe(port, mux))
+	
+	defer sqldb.Close()
 
 }

@@ -1,25 +1,26 @@
 package sqldb
 
-import(	
+import (
 	"database/sql"
-	_ "github.com/lib/pq"
 	"fmt"
+	"os"
 	"todo-go/structs"
+
+	_ "github.com/lib/pq"
 )
 
 var db *sql.DB
 
-const (
-	host     = "127.0.0.1"
-	port     = 5432
-	user     = "root"
-	password = "secret"
+var (
+	host     = os.Getenv("DB_HOST")     //"127.0.0.1"
+	port     = os.Getenv("DB_PORT")     // "5432"
+	user     = os.Getenv("DB_USERNAME") // "root"
+	password = os.Getenv("DB_PASSWORD") // "secret"
 	dbname   = "root"
 )
 
-
 func OpenConnection() {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 
@@ -32,27 +33,40 @@ func OpenConnection() {
 	if err != nil {
 		panic(err)
 	}
-db = mydb
+	db = mydb
+	createTable()
 }
 
-func ShowTables(){
+func createTable() {
+	stmt := `
+	CREATE TABLE todo(id INT GENERATED ALWAYS AS IDENTITY,
+	 ip_address VARCHAR(200) NOT NULL, text VARCHAR(2000) NOT NULL,
+	 checked BOOLEAN NOT NULL, created_at timestamptz NOT NULL DEFAULT NOW());`
+
+	_, err := db.Exec(stmt)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func ShowTables() {
 	rows, err := db.Query(`SELECT * FROM pg_catalog.pg_tables
 	WHERE schemaname != 'pg_catalog' AND 
-		schemaname != 'information_schema';`)	
+		schemaname != 'information_schema';`)
 	if err != nil {
 		panic(err)
 	}
 	defer rows.Close()
-	cols,_:= rows.Columns()
+	cols, _ := rows.Columns()
 	// fmt.Println(rows.Columns())
-	for i := range(cols){
+	for i := range cols {
 		fmt.Println(cols[i])
 	}
 	fmt.Println(rows.Next())
 
 }
 
-func Close(){
+func Close() {
 	db.Close()
 }
 
@@ -67,15 +81,15 @@ func InsertTodo(t *structs.TodoInsert) (int64, error) {
 	return id, err
 }
 
-func GetTodos()([]structs.TodoQuery, error){
+func GetTodos() ([]structs.TodoQuery, error) {
 	rows, err := db.Query(`SELECT id, text, checked FROM todo;`)
 	if err != nil {
 		panic(err)
 	}
 	defer rows.Close()
-	
-	var ts [] structs.TodoQuery
-	for rows.Next(){
+
+	var ts []structs.TodoQuery
+	for rows.Next() {
 		var t structs.TodoQuery
 		if err := rows.Scan(&t.Id, &t.Text, &t.Checked); err != nil {
 			return ts, err
@@ -83,13 +97,13 @@ func GetTodos()([]structs.TodoQuery, error){
 		ts = append(ts, t)
 	}
 	if err = rows.Err(); err != nil {
-        return ts, err
-    }
-    return ts, nil
+		return ts, err
+	}
+	return ts, nil
 
 }
 
-func UpdateTodoChecked(id int64, check bool) (error) {
+func UpdateTodoChecked(id int64, check bool) error {
 	stmnt := `UPDATE todo SET checked=($1) where id=($2)`
 	_, err := db.Exec(stmnt, check, id)
 	if err != nil {
@@ -98,7 +112,7 @@ func UpdateTodoChecked(id int64, check bool) (error) {
 	return err
 }
 
-func DeleteTodo(id int64) (error) {
+func DeleteTodo(id int64) error {
 	stmnt := `DELETE FROM todo where id=($1)`
 	_, err := db.Exec(stmnt, id)
 	if err != nil {

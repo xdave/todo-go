@@ -1,0 +1,21 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: app.Dockerfile
+    environment:
+      DB_HOST: postgres
+      DB_PORT: '5432'
+      DB_USERNAME: root
+      DB_PASSWORD: secret
+    ports:
+      - 8000:8000 
+    depends_on:
+      - postgres
+    
+  postgres:
+    build:
+      context: .
+      dockerfile: db.Dockerfile
+    ports:
+      - 5432:5432

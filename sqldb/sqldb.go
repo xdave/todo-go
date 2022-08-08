@@ -14,9 +14,9 @@ var db *sql.DB
 var (
 	host     = os.Getenv("DB_HOST")     //"127.0.0.1"
 	port     = os.Getenv("DB_PORT")     // "5432"
-	user     = os.Getenv("DB_USERNAME") // "root"
+	user     = os.Getenv("DB_USERNAME") // "goapp"
 	password = os.Getenv("DB_PASSWORD") // "secret"
-	dbname   = "root"
+	dbname   = "goapp"
 )
 
 func OpenConnection() {
